@@ -1,0 +1,312 @@
+import Comment from '../models/Comment.js';
+import Blog from '../models/Blogs.js';
+import cacheService from '../services/cacheService.js';
+import socketService from '../services/socketService.js';
+
+// Create comment
+export const createComment = async (req, res) => {
+    try {
+        const { content, parentComment } = req.body;
+        const identifier = req.params.postId;
+
+        // Check if identifier is a valid MongoDB ObjectId or a slug
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+        
+        const query = isObjectId 
+            ? { _id: identifier, isDeleted: false }
+            : { slug: identifier, isDeleted: false };
+
+        // Check if post exists
+        const post = await Blog.findOne(query);
+        if (!post) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Blog post not found' 
+            });
+        }
+
+        // If replying to a comment, check if parent exists
+        if (parentComment) {
+            const parent = await Comment.findById(parentComment);
+            if (!parent || parent.post.toString() !== post._id.toString()) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Parent comment not found' 
+                });
+            }
+        }
+
+        const comment = await Comment.create({
+            content,
+            author: req.user._id,
+            post: post._id,
+            parentComment: parentComment || null
+        });
+
+        await comment.populate('author', 'username name avatar');
+
+        // Invalidate cache
+        cacheService.invalidateCache([
+            `cache:/api/blogs/${post._id}`,
+            `cache:/api/comments/post/${post._id}`
+        ]);
+
+        // Emit real-time notification
+        socketService.emitNewComment(post._id, comment);
+
+        // Notify blog author if comment is not from them
+        if (post.author.toString() !== req.user._id.toString()) {
+            socketService.notifyUser(post.author, {
+                type: 'new-comment',
+                message: `${req.user.name} commented on your post "${post.title}"`,
+                blogId: postId,
+                commentId: comment._id
+            });
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Comment created successfully',
+            data: comment
+        });
+    } catch (error) {
+        console.error('Create comment error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error creating comment', 
+            error: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+};
+
+// Get comments for a post
+export const getCommentsByPost = async (req, res) => {
+    try {
+        const identifier = req.params.postId;
+        const { page = 1, limit = 20 } = req.query;
+
+        // Check if identifier is a valid MongoDB ObjectId or a slug
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+        
+        const query = isObjectId 
+            ? { _id: identifier, isDeleted: false }
+            : { slug: identifier, isDeleted: false };
+
+        // Check if post exists
+        const post = await Blog.findOne(query);
+        if (!post) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Blog post not found' 
+            });
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // Get top-level comments (not replies)
+        const comments = await Comment.find({ 
+            post: post._id, 
+            parentComment: null 
+        })
+        .populate('author', 'username name avatar')
+        .populate({
+            path: 'replies',
+            populate: { path: 'author', select: 'username name avatar' },
+            options: { sort: { createdAt: 1 } }
+        })
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit))
+        .skip(skip);
+
+        const total = await Comment.countDocuments({ 
+            post: post._id, 
+            parentComment: null 
+        });
+
+        res.json({
+            success: true,
+            data: comments,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching comments', 
+            error: error.message 
+        });
+    }
+};
+
+// Get single comment
+export const getCommentById = async (req, res) => {
+    try {
+        const comment = await Comment.findById(req.params.id)
+            .populate('author', 'username name avatar')
+            .populate({
+                path: 'replies',
+                populate: { path: 'author', select: 'username name avatar' }
+            });
+
+        if (!comment) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Comment not found' 
+            });
+        }
+
+        res.json({
+            success: true,
+            data: comment
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching comment', 
+            error: error.message 
+        });
+    }
+};
+
+// Update comment
+export const updateComment = async (req, res) => {
+    try {
+        const comment = await Comment.findById(req.params.id);
+
+        if (!comment) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Comment not found' 
+            });
+        }
+
+        // Check ownership
+        if (req.user._id.toString() !== comment.author.toString() && 
+            req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Access denied. You can only edit your own comments.' 
+            });
+        }
+
+        const { content } = req.body;
+        
+        comment.content = content;
+        comment.isEdited = true;
+        comment.editedAt = new Date();
+        await comment.save();
+
+        await comment.populate('author', 'username name avatar');
+
+        // Invalidate cache
+        cacheService.invalidateCache([
+            `cache:/api/blogs/${comment.post}`,
+            `cache:/api/comments/post/${comment.post}`
+        ]);
+
+        // Emit real-time update
+        socketService.emitCommentUpdate(comment.post, comment);
+
+        res.json({
+            success: true,
+            message: 'Comment updated successfully',
+            data: comment
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating comment', 
+            error: error.message 
+        });
+    }
+};
+
+// Delete comment
+export const deleteComment = async (req, res) => {
+    try {
+        const comment = await Comment.findById(req.params.id);
+
+        if (!comment) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Comment not found' 
+            });
+        }
+
+        // Check ownership
+        if (req.user._id.toString() !== comment.author.toString() && 
+            req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Access denied. You can only delete your own comments.' 
+            });
+        }
+
+        const postId = comment.post;
+
+        // Delete all replies first
+        await Comment.deleteMany({ parentComment: comment._id });
+        
+        // Delete the comment
+        await comment.deleteOne();
+
+        // Invalidate cache
+        cacheService.invalidateCache([
+            `cache:/api/blogs/${postId}`,
+            `cache:/api/comments/post/${postId}`
+        ]);
+
+        // Emit real-time deletion
+        socketService.emitCommentDelete(postId, comment._id);
+
+        res.json({
+            success: true,
+            message: 'Comment deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error deleting comment', 
+            error: error.message 
+        });
+    }
+};
+
+// Get user's comments
+export const getMyComments = async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const comments = await Comment.find({ author: req.user._id })
+            .populate('author', 'username name avatar')
+            .populate('post', 'title')
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit))
+            .skip(skip);
+
+        const total = await Comment.countDocuments({ author: req.user._id });
+
+        res.json({
+            success: true,
+            data: comments,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching your comments', 
+            error: error.message 
+        });
+    }
+};
