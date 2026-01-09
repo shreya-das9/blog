@@ -80,7 +80,7 @@ const CreateBlog = () => {
                             value={formData.title}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                             placeholder="Enter blog title"
                         />
                     </div>
@@ -95,7 +95,7 @@ const CreateBlog = () => {
                             value={formData.excerpt}
                             onChange={handleChange}
                             rows="3"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                             placeholder="Brief summary of your blog post"
                         ></textarea>
                     </div>
@@ -111,7 +111,7 @@ const CreateBlog = () => {
                             onChange={handleChange}
                             required
                             rows="12"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                             placeholder="Write your blog content here..."
                         ></textarea>
                     </div>
@@ -126,7 +126,7 @@ const CreateBlog = () => {
                             name="coverImage"
                             value={formData.coverImage}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                             placeholder="https://example.com/image.jpg"
                         />
                     </div>
@@ -141,7 +141,7 @@ const CreateBlog = () => {
                             name="tags"
                             value={formData.tags}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                             placeholder="javascript, react, nodejs (comma separated)"
                         />
                     </div>
@@ -155,7 +155,7 @@ const CreateBlog = () => {
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                         >
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>

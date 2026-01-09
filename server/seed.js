@@ -11,21 +11,14 @@ const sampleUsers = [
         username: 'admin',
         name: 'Admin User',
         email: 'admin@blog.com',
-        password: 'Admin123!',
+        password: 'Admin123',
         role: 'admin'
     },
     {
-        username: 'john_doe',
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'Password123!',
-        role: 'user'
-    },
-    {
-        username: 'jane_smith',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        password: 'Password123!',
+        username: 'shreya_ddd',
+        name: 'Shreya DDD',
+        email: 'shreya@blog.com',
+        password: 'Shreya123',
         role: 'user'
     }
 ];
@@ -116,8 +109,8 @@ const seedDatabase = async () => {
         
         console.log('\n✨ Database seeded successfully!');
         console.log('\n🔐 Login Credentials:');
-        console.log('Admin: admin@blog.com / Admin123!');
-        console.log('User: john@example.com / Password123!');
+        console.log('Admin: admin@blog.com / Admin123');
+        console.log('User: shreya@blog.com / Shreya123');
         
         process.exit(0);
     } catch (error) {

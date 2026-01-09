@@ -46,27 +46,27 @@ const BlogList = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="flex justify-center items-center min-h-screen bg-gray-900">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-900 min-h-screen">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">All Blog Posts</h1>
+                <h1 className="text-3xl font-bold text-white mb-4">All Blog Posts</h1>
                 <form onSubmit={handleSearch} className="flex gap-2">
                     <input
                         type="text"
                         name="search"
                         defaultValue={search}
                         placeholder="Search blogs..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-4 py-2 border border-gray-600 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     />
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        className="px-6 py-2 bg-cyan-400 text-gray-900 rounded-md hover:bg-cyan-500 font-medium"
                     >
                         Search
                     </button>
@@ -78,7 +78,7 @@ const BlogList = () => {
                     <Link 
                         key={blog._id} 
                         to={`/blogs/${blog.slug || blog._id}`}
-                        className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow block"
+                        className="bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow block border border-gray-700"
                     >
                         {blog.coverImage && (
                             <img
@@ -88,13 +88,13 @@ const BlogList = () => {
                             />
                         )}
                         <div className="p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600">
+                            <h2 className="text-xl font-semibold text-white mb-2 line-clamp-2 hover:text-cyan-400">
                                 {blog.title}
                             </h2>
-                            <p className="text-gray-600 mb-4 line-clamp-3">
+                            <p className="text-gray-400 mb-4 line-clamp-3">
                                 {blog.excerpt || blog.content.substring(0, 150)}...
                             </p>
-                            <div className="flex items-center justify-between text-sm text-gray-500">
+                            <div className="flex items-center justify-between text-sm text-gray-400">
                                 <div className="flex items-center">
                                     <span className="font-medium">{blog.author.name}</span>
                                 </div>
@@ -109,7 +109,7 @@ const BlogList = () => {
                                     {blog.tags.slice(0, 3).map((tag, index) => (
                                         <span
                                             key={index}
-                                            className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
+                                            className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded"
                                         >
                                             #{tag}
                                         </span>
@@ -123,7 +123,7 @@ const BlogList = () => {
 
             {blogs.length === 0 && (
                 <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">No blogs found</p>
+                    <p className="text-gray-400 text-lg">No blogs found</p>
                 </div>
             )}
 
@@ -132,17 +132,17 @@ const BlogList = () => {
                     <button
                         onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page - 1 })}
                         disabled={page === 1}
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 text-gray-300"
                     >
                         Previous
                     </button>
-                    <span className="px-4 py-2 bg-white border border-gray-300 rounded-md">
+                    <span className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-gray-300">
                         Page {page} of {pagination.pages}
                     </span>
                     <button
                         onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page + 1 })}
                         disabled={page === pagination.pages}
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 text-gray-300"
                     >
                         Next
                     </button>

@@ -36,7 +36,7 @@ function App() {
       <Router>
         <AuthProvider>
           <SocketProvider>
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-gray-900 text-white">
               <Navbar />
               <Routes>
                 <Route path="/" element={<Home />} />
